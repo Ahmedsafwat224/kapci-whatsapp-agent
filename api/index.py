@@ -1,35 +1,9 @@
-"""
-Vercel Serverless Function Entry Point
-"""
-import sys
+from flask import Flask, request
 import os
 
-# Get the absolute path to the project root
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path.insert(0, project_root)
-
-# Set environment variables for Vercel (before any imports)
-os.environ['FLASK_ENV'] = 'production'
-
-# Use in-memory SQLite for Vercel (serverless has no persistent filesystem)
-os.environ['DATABASE_URL'] = 'sqlite:///:memory:'
-
-# Now import Flask app
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
-# Create a minimal Flask app for Vercel
-app = Flask(__name__,
-            template_folder=os.path.join(project_root, 'templates'),
-            static_folder=os.path.join(project_root, 'static'))
-
+app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'vercel-secret-key')
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
-
-# Simple health check route
 @app.route('/')
 def index():
     return '''
@@ -38,21 +12,29 @@ def index():
     <head>
         <title>KAPCI WhatsApp AI Agent</title>
         <style>
-            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
-            h1 { color: #2563eb; }
-            .status { background: #d1fae5; padding: 10px; border-radius: 5px; margin: 20px 0; }
-            .links a { display: block; margin: 10px 0; color: #2563eb; }
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; background: #f5f5f5; }
+            .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            h1 { color: #2563eb; margin-bottom: 10px; }
+            .status { background: #d1fae5; padding: 15px; border-radius: 5px; margin: 20px 0; color: #065f46; }
+            .links { margin-top: 20px; }
+            .links a { display: inline-block; margin: 5px 10px 5px 0; padding: 10px 20px; background: #2563eb; color: white; text-decoration: none; border-radius: 5px; }
+            .links a:hover { background: #1d4ed8; }
+            .note { background: #fef3c7; padding: 15px; border-radius: 5px; margin-top: 20px; color: #92400e; }
         </style>
     </head>
     <body>
-        <h1>KAPCI WhatsApp AI Agent</h1>
-        <div class="status">✅ Server is running on Vercel!</div>
-        <div class="links">
-            <h3>Available Endpoints:</h3>
-            <a href="/api/health">/api/health - Health Check</a>
-            <a href="/api/stats">/api/stats - Statistics</a>
+        <div class="container">
+            <h1>KAPCI WhatsApp AI Agent</h1>
+            <p>Compensation Ticketing System</p>
+            <div class="status">Server is running on Vercel!</div>
+            <div class="links">
+                <a href="/api/health">Health Check</a>
+                <a href="/api/stats">Statistics</a>
+            </div>
+            <div class="note">
+                <strong>Note:</strong> This is a serverless deployment. For full functionality with the chat interface and database, deploy using Docker or a traditional server.
+            </div>
         </div>
-        <p><strong>Note:</strong> This is a serverless deployment. For full functionality with database persistence, use a managed database like Vercel Postgres or Supabase.</p>
     </body>
     </html>
     '''
@@ -72,9 +54,6 @@ def stats():
 
 @app.route('/api/webhook/whatsapp', methods=['GET', 'POST'])
 def whatsapp_webhook():
-    from flask import request
-
-    # Webhook verification (GET request from WhatsApp)
     if request.method == 'GET':
         verify_token = os.getenv('WHATSAPP_VERIFY_TOKEN', 'kapci_verify_token')
         mode = request.args.get('hub.mode')
@@ -85,8 +64,8 @@ def whatsapp_webhook():
             return challenge, 200
         return 'Verification failed', 403
 
-    # Handle incoming messages (POST request)
     return {'status': 'received'}, 200
 
-# Required for Vercel
-handler = app
+@app.route('/favicon.ico')
+def favicon():
+    return '', 204
