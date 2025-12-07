@@ -67,11 +67,11 @@ class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
     SQLALCHEMY_ECHO = False
-    
-    # Use MySQL/PostgreSQL in production
+
+    # Use environment variable or SQLite fallback for serverless
     SQLALCHEMY_DATABASE_URI = os.getenv(
         'DATABASE_URL',
-        'mysql+pymysql://user:password@localhost/kapci'
+        'sqlite:///kapci.db'
     )
 
 
