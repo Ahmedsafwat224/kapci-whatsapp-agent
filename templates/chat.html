@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KAPCI WhatsApp AI Agent - Chat Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            display: flex;
+            gap: 30px;
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        /* Phone Frame */
+        .phone-frame {
+            width: 380px;
+            height: 720px;
+            background: #000;
+            border-radius: 45px;
+            padding: 12px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            flex-shrink: 0;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #111b21;
+            border-radius: 35px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* WhatsApp Header */
+        .wa-header {
+            background: #202c33;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .wa-back { color: #00a884; font-size: 1.3rem; cursor: pointer; }
+        
+        .wa-avatar {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #00a884, #25d366);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+        
+        .wa-info { flex: 1; }
+        .wa-name { color: #e9edef; font-weight: 600; font-size: 1rem; }
+        .wa-status { color: #8696a0; font-size: 0.75rem; display: flex; align-items: center; gap: 5px; }
+        .wa-status::before { content: ''; width: 8px; height: 8px; background: #25d366; border-radius: 50%; }
+        
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: linear-gradient(180deg, #0b141a 0%, #111b21 100%);
+        }
+        
+        .message {
+            max-width: 85%;
+            margin-bottom: 8px;
+            clear: both;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message-bubble {
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .message.inbound { float: left; }
+        .message.inbound .message-bubble {
+            background: #202c33;
+            color: #e9edef;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message.outbound { float: right; }
+        .message.outbound .message-bubble {
+            background: #005c4b;
+            color: #e9edef;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message-time {
+            font-size: 0.65rem;
+            color: #8696a0;
+            text-align: right;
+            margin-top: 4px;
+        }
+        
+        .typing-indicator {
+            padding: 16px;
+            color: #8696a0;
+            font-style: italic;
+            font-size: 0.85rem;
+            display: none;
+        }
+        .typing-indicator.show { display: block; }
+        
+        /* Input Area */
+        .input-area {
+            background: #202c33;
+            padding: 12px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .input-area input {
+            flex: 1;
+            background: #2a3942;
+            border: none;
+            padding: 14px 18px;
+            border-radius: 24px;
+            color: #e9edef;
+            font-size: 0.95rem;
+            outline: none;
+        }
+        
+        .input-area input::placeholder { color: #8696a0; }
+        
+        .send-btn {
+            width: 48px;
+            height: 48px;
+            background: #00a884;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .send-btn:hover { background: #00c896; transform: scale(1.05); }
+        .send-btn:disabled { background: #374248; cursor: not-allowed; transform: none; }
+        
+        /* Info Panel */
+        .info-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            border-radius: 24px;
+            padding: 32px;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-panel h1 {
+            color: #00a884;
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .info-panel .subtitle {
+            color: #94a3b8;
+            margin-bottom: 32px;
+            font-size: 1rem;
+        }
+        
+        .info-section {
+            margin-bottom: 28px;
+        }
+        
+        .info-section h3 {
+            color: #00a884;
+            margin-bottom: 14px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-section p, .info-section li {
+            color: #cbd5e1;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+        
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .info-section li {
+            padding: 8px 0;
+            padding-left: 28px;
+            position: relative;
+        }
+        
+        .info-section li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #00a884;
+            font-weight: bold;
+        }
+        
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        
+        .quick-btn {
+            background: rgba(0, 168, 132, 0.1);
+            border: 1px solid #00a884;
+            color: #00a884;
+            padding: 10px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .quick-btn:hover {
+            background: #00a884;
+            color: white;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .nav-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .nav-link.admin {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+        }
+        
+        .nav-link.admin:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+        }
+        
+        .nav-link.tech {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .nav-link.tech:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* Scrollbar */
+        .chat-area::-webkit-scrollbar { width: 6px; }
+        .chat-area::-webkit-scrollbar-track { background: transparent; }
+        .chat-area::-webkit-scrollbar-thumb { background: #374248; border-radius: 3px; }
+        
+        @media (max-width: 900px) {
+            .container { flex-direction: column; align-items: center; }
+            .info-panel { width: 100%; max-width: 400px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Phone Frame -->
+        <div class="phone-frame">
+            <div class="phone-screen">
+                <!-- WhatsApp Header -->
+                <div class="wa-header">
+                    <span class="wa-back">←</span>
+                    <div class="wa-avatar">K</div>
+                    <div class="wa-info">
+                        <div class="wa-name">KAPCI Support</div>
+                        <div class="wa-status">Online - AI Agent</div>
+                    </div>
+                </div>
+                
+                <!-- Chat Area -->
+                <div class="chat-area" id="chatArea"></div>
+                
+                <div class="typing-indicator" id="typingIndicator">
+                    KAPCI AI is typing...
+                </div>
+                
+                <!-- Input Area -->
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Type a message..." autocomplete="off">
+                    <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info Panel -->
+        <div class="info-panel">
+            <h1>🤖 KAPCI AI Agent</h1>
+            <p class="subtitle">WhatsApp Compensation Ticketing System</p>
+            
+            <div class="info-section">
+                <h3>📱 How to Test</h3>
+                <ul>
+                    <li>Type "hi" or "مرحبا" to start</li>
+                    <li>Press "1" to submit a complaint</li>
+                    <li>Press "2" to check ticket status</li>
+                    <li>Follow the conversation flow</li>
+                </ul>
+            </div>
+            
+            <div class="info-section">
+                <h3>⚡ Quick Test</h3>
+                <div class="quick-actions">
+                    <button class="quick-btn" onclick="quickMessage('Hello')">Hello</button>
+                    <button class="quick-btn" onclick="quickMessage('1')">1 - Complaint</button>
+                    <button class="quick-btn" onclick="quickMessage('2')">2 - Status</button>
+                    <button class="quick-btn" onclick="quickMessage('مرحبا')">مرحبا</button>
+                    <button class="quick-btn" onclick="quickMessage('شكوى')">شكوى</button>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h3>🔄 Demo Flow</h3>
+                <ul>
+                    <li>Submit complaint via chat</li>
+                    <li>AI collects product & issue info</li>
+                    <li>Ticket created automatically</li>
+                    <li>Technical team reviews in Admin</li>
+                    <li>Customer gets notification</li>
+                </ul>
+            </div>
+            
+            <div class="nav-links">
+                <a href="/admin" class="nav-link admin">🔧 Admin Dashboard</a>
+                <a href="/technician" class="nav-link tech">👨‍🔧 Technician Portal</a>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        
+        // Generate phone number for this session
+        const phone = '+20' + Math.floor(Math.random() * 1000000000);
+        
+        // Load existing messages
+        loadMessages();
+        
+        // Send initial greeting after short delay
+        setTimeout(() => {
+            if (chatArea.children.length === 0) {
+                quickMessage('hi');
+            }
+        }, 800);
+        
+        // Enter key to send
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+        
+        function loadMessages() {
+            fetch(`/api/messages/${encodeURIComponent(phone)}`)
+                .then(r => r.json())
+                .then(data => {
+                    data.messages.forEach(msg => {
+                        addMessage(msg.direction, msg.content, false);
+                    });
+                    scrollToBottom();
+                });
+        }
+        
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            addMessage('inbound', message);
+            messageInput.value = '';
+            
+            typingIndicator.classList.add('show');
+            sendBtn.disabled = true;
+            
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({phone: phone, message: message})
+            })
+            .then(r => r.json())
+            .then(data => {
+                typingIndicator.classList.remove('show');
+                sendBtn.disabled = false;
+                setTimeout(() => addMessage('outbound', data.response), 300);
+            })
+            .catch(err => {
+                typingIndicator.classList.remove('show');
+                sendBtn.disabled = false;
+                console.error(err);
+            });
+        }
+        
+        function quickMessage(text) {
+            messageInput.value = text;
+            sendMessage();
+        }
+        
+        function addMessage(direction, content, scroll = true) {
+            const now = new Date().toLocaleTimeString('en-US', {hour: '2-digit', minute: '2-digit', hour12: false});
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${direction}`;
+            msgDiv.innerHTML = `
+                <div class="message-bubble">${escapeHtml(content)}</div>
+                <div class="message-time">${now}</div>
+            `;
+            
+            chatArea.appendChild(msgDiv);
+            
+            const clearDiv = document.createElement('div');
+            clearDiv.style.clear = 'both';
+            chatArea.appendChild(clearDiv);
+            
+            if (scroll) scrollToBottom();
+        }
+        
+        function scrollToBottom() {
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/\n/g, '<br>');
+        }
+    </script>
+</body>
+</html>
