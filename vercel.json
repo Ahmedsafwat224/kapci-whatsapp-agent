@@ -3,10 +3,7 @@
   "builds": [
     {
       "src": "api/index.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb"
-      }
+      "use": "@vercel/python"
     }
   ],
   "routes": [
@@ -15,10 +12,7 @@
       "dest": "/api/index.py"
     }
   ],
-  "functions": {
-    "api/index.py": {
-      "memory": 256,
-      "maxDuration": 10
-    }
-  }
+  "outputDirectory": ".",
+  "installCommand": "pip install flask",
+  "framework": null
 }

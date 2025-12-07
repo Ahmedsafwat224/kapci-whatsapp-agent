@@ -1,0 +1,13 @@
+run.py
+app/
+config/
+templates/
+static/
+tests/
+docs/
+*.md
+Dockerfile
+docker-compose.yml
+nginx.conf
+.env*
+*.db
